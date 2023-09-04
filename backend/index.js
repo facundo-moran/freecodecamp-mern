@@ -1,20 +1,29 @@
 import express from 'express';
-import { MONGO_URL, PORT } from './config.js';
-import mongoose from 'mongoose'
+import expressListEndpoints from 'express-list-endpoints'
+import bodyParser from 'body-parser'
 
+import { corsMiddleware } from './src/middlewares/corsMiddleware.js';
+
+//ROUTE
+import { router as bookRoutes } from './src/routes/v1/bookRoute.js'
 //DB
-mongoose.connect(MONGO_URL).then(() => {
-    console.log("mongoose successful connection");
-    //SERVER
-    app.listen(PORT, () => { console.log(`API Listening at localhost:${PORT}`) })
-}).catch(console.error)
+import { connectDB } from './src/configs/db.config.js'
 
-//EXPRESS
 const app = express();
 
-//ROUTES
-app.get('/', (req, res) => {
-    res.send("Hello world from NodeJS 18");
-})
+/**
+ *  MIDDLEWARES
+ */
+app.use(bodyParser.json());
+app.use(corsMiddleware);
 
+app.use('/api/v1', bookRoutes)
 
+// Obtén la lista de rutas registradas
+const routes = expressListEndpoints(app);
+
+routes.forEach((route) => {
+  console.log(`Route: ${route.methods.join(', ')} - ${route.path}`);
+});
+
+connectDB(app);
